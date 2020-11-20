@@ -7,7 +7,16 @@ project(dummie_recognition)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+  geometry_msgs
+  mavros_msgs
+  roscpp
+  sensor_msgs
+  cv_bridge
+  image_transport
+  std_msgs
+)
+find_package(OpenCV  REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -99,11 +108,14 @@ find_package(catkin REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES dummie_recognition
-#  CATKIN_DEPENDS other_catkin_pkg
-#  DEPENDS system_lib
+  INCLUDE_DIRS
+  CATKIN_DEPENDS roscpp
+                 sensor_msgs
+                 std_msgs
+                 cv_bridge
+                 image_transport
 )
+
 
 ###########
 ## Build ##
@@ -113,7 +125,8 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 # include
-# ${catkin_INCLUDE_DIRS}
+ ${catkin_INCLUDE_DIRS}
+ ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -145,6 +158,7 @@ add_executable(thermal_detection_node src/thermal_detection.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(thermal_detection_node
   ${catkin_LIBRARIES}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 #############
