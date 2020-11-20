@@ -73,7 +73,7 @@ find_package(OpenCV  REQUIRED)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
+#generate_messages(
 #   DEPENDENCIES
 #   std_msgs  # Or other packages containing msgs
 # )
@@ -124,7 +124,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+ include
  ${catkin_INCLUDE_DIRS}
  ${OpenCV_INCLUDE_DIRS}
 )
@@ -158,7 +158,7 @@ add_executable(thermal_detection_node src/thermal_detection.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(thermal_detection_node
   ${catkin_LIBRARIES}
-  ${OpenCV_INCLUDE_DIRS}
+  ${OpenCV_LIBS}
 )
 
 #############

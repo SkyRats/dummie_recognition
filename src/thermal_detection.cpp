@@ -121,3 +121,12 @@ bool suficient_red(Mat frame)
 
 // g++ thermal_detection.cpp -o thermal_detection `pkg-config --cflags --libs opencv`
 // ./thermal_detection
+
+/*modify :　LIBRARIES += opencv_core opencv_highgui opencv_imgproc opencv_video
+to: LIBRARIES += opencv_core opencv_highgui opencv_imgproc opencv_videoio
+
+open your Makefile with some text editor, locate line 164 (in my case), add opencv_imgcodecs behind.
+
+ LIBRARIES += glog gflags protobuf leveldb snappy \
+  lmdb boost_system hdf5_hl hdf5 m \
+  opencv_core opencv_highgui opencv_imgproc opencv_imgcodecs*/
