@@ -1,27 +1,32 @@
 #include <iostream>
+#include "ros/ros.h"
 #include <opencv2/opencv.hpp>
 #include <opencv2/videoio.hpp>
+#include <sensor_msgs/image_encodings.h> 
+#include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/Image.h>
 
 using namespace cv;
 //using namespace std;
 
-
 Mat red(Mat frame);
 bool suficient_red(Mat frame);
 
-int main (){
-/*
-    // test with image
-    Mat imgHSV;
-    Mat img;
-    Mat frame;
+void cam_callback(onst sensor_msgs::ImageConstPtr& img);
 
-    img = imread("mario.jpeg", CV_LOAD_IMAGE_COLOR);
-    namedWindow("Original", CV_WINDOW_AUTOSIZE);
-    imshow("Original", img);
-    // end of test with image
-*/
-    // test with webcam
+int main (){
+
+    ros::init(argc, argv, "dummie_detection");
+
+    ros::NodeHandle n;
+  
+    ros::Subscriber cam_sub = n.subscribe("/iris_fpv_cam/usb_cam/image_raw", 5, cam_callback);
+    
+
+//NodeHandle::subscriber(cam_sub);
+
+    ros::spin(); // trava o programa para rodar somente o callback
+
     Mat imgHSV;
     VideoCapture camera(0);
     Mat frame;
@@ -45,11 +50,11 @@ int main (){
 
        
         imgred = red(imgHSV);
-        //namedWindow("RED", CV_WINDOW_AUTOSIZE);
+        namedWindow("RED", CV_WINDOW_AUTOSIZE);
 
         
         cvtColor(imgred, imggray, COLOR_RGB2GRAY);
-        //namedWindow("GRAY", CV_WINDOW_AUTOSIZE); CV_WINDOW_AUTOSIZE
+        namedWindow("GRAY", CV_WINDOW_AUTOSIZE); CV_WINDOW_AUTOSIZE
     
         if (suficient_red(imggray)){
             std::cout << "YAY!!" << std::endl;
@@ -69,6 +74,14 @@ int main (){
 };
     
 
+void cam_callback(const sensor_msgs::ImageConstPtr& img)
+{
+    cv_bridge::CvImagePtr cam_frame;
+    cam_frame = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::BGR8);
+}
+
+
+  
 Mat red(Mat frame){
 
     Mat mask1, mask2, res1;
@@ -117,16 +130,3 @@ bool suficient_red(Mat frame)
         return false;
 
 }
-
-
-// g++ thermal_detection.cpp -o thermal_detection `pkg-config --cflags --libs opencv`
-// ./thermal_detection
-
-/*modify :　LIBRARIES += opencv_core opencv_highgui opencv_imgproc opencv_video
-to: LIBRARIES += opencv_core opencv_highgui opencv_imgproc opencv_videoio
-
-open your Makefile with some text editor, locate line 164 (in my case), add opencv_imgcodecs behind.
-
- LIBRARIES += glog gflags protobuf leveldb snappy \
-  lmdb boost_system hdf5_hl hdf5 m \
-  opencv_core opencv_highgui opencv_imgproc opencv_imgcodecs*/
