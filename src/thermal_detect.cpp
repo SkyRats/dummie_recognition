@@ -2,131 +2,93 @@
 #include "ros/ros.h"
 #include <opencv2/opencv.hpp>
 #include <opencv2/videoio.hpp>
-#include <sensor_msgs/image_encodings.h> 
+#include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/Image.h>
+#include "thermal_detect.h"
 
 using namespace cv;
 //using namespace std;
+//     running_sub = rospy.Subscriber("/cv_detection/set_running_state", Bool, running_callback)
+// self.cv_control_publisher = rospy.Publisher("/cv_detection/set_running_state", Bool, queue_size=10)
 
-Mat red(Mat frame);
-bool suficient_red(Mat frame);
+//Mat red(Mat frame);
+//bool suficient_red(Mat frame);
 
 void cam_callback(onst sensor_msgs::ImageConstPtr& img);
 
 int main (){
+
+    int contador = 0;
+    Mat frame;
+    Mat imgred;
+    Mat imggray; 
+   
 
     ros::init(argc, argv, "dummie_detection");
 
     ros::NodeHandle n;
   
     ros::Subscriber cam_sub = n.subscribe("/iris_fpv_cam/usb_cam/image_raw", 5, cam_callback);
-    
-
-//NodeHandle::subscriber(cam_sub);
-
+    ros:: Subscriber running_state_sub = n.subscribe("/cv_detection/set_running_state", 10, running_callback)
     ros::spin(); // trava o programa para rodar somente o callback
-
-    Mat imgHSV;
-    VideoCapture camera(0);
-    Mat frame;
-
-    if (!camera.isOpened()) {
-        std::cout << "ERROR: Could not open camera" << std::endl;
-        return 1;
-    }
-
-    //namedWindow("Webcam", CV_WINDOW_AUTOSIZE);
     
-    Mat imgred;
-    Mat imggray;
+    bool running = NodeHandle::subscriber(running_state_sub); 
     
-    while (1) {
+    while (running == true) {
         // Show each frame
-        camera.read(frame);
-        imshow("Webcam", frame);
+        frame = NodeHandle::subscriber(cam_sub);
+        imshow("Camera", frame);
 
         cvtColor(frame, imgHSV, COLOR_RGB2HSV);
-
        
         imgred = red(imgHSV);
-        namedWindow("RED", CV_WINDOW_AUTOSIZE);
-
         
         cvtColor(imgred, imggray, COLOR_RGB2GRAY);
-        namedWindow("GRAY", CV_WINDOW_AUTOSIZE); CV_WINDOW_AUTOSIZE
     
         if (suficient_red(imggray)){
-            std::cout << "YAY!!" << std::endl;
+            std::cout << "DUMMIE FOUND" << std::endl;
+            contador++;
+            //break;
+        }
+        if (contador == 1){
+            std::cout << "ALL DUMMIES HAVE BEEN FOUND" << std::endl;
             break;
         }
+        running = NodeHandle::subscriber(running_state_sub); 
     }
+    if (running == true){
+1        // end of webcam
+        namedWindow("RED", CV_WINDOW_AUTOSIZE);
+        namedWindow("GRAY", CV_WINDOW_AUTOSIZE); CV_WINDOW_AUTOSIZE
+        imshow("RED", imgred);
+        imshow("GRAY", imggray);
+        waitKey(0);
 
-    // end of webcam
-    
-    imshow("RED", imgred);
-    imshow("GRAY", imggray);
-
-    waitKey(0);
+    }
     // end of red and gray image
 
     return 0;
 };
     
+void running_callback(bool data)
+{
+    bool running = data.data;
+
+}
 
 void cam_callback(const sensor_msgs::ImageConstPtr& img)
 {
-    cv_bridge::CvImagePtr cam_frame;
-    cam_frame = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::BGR8);
-}
-
-
-  
-Mat red(Mat frame){
-
-    Mat mask1, mask2, res1;
-    //Mat mask2;
-   // Mat res1;
-// identify red images from frame.
-//https://www.learnopencv.com/invisibility-cloak-using-color-detection-and-segmentation-with-opencv/
-
-    // creating mask
-    inRange(frame, Scalar(0, 120, 70), Scalar(10, 255, 255), mask1);
-    inRange(frame, Scalar(170, 120, 70), Scalar(180, 255, 255), mask2);
-
-    mask1 += mask2;
-
-    Mat kernel = Mat::ones(3,3, CV_32F);
-    morphologyEx(mask1,mask1,cv::MORPH_OPEN,kernel);
-    morphologyEx(mask1,mask1,cv::MORPH_DILATE,kernel);
-
-    // inverted mask
-    bitwise_not(mask1, mask2);
-
-    // red part
-    bitwise_and(frame, frame, res1, mask2);
-
-    return (res1);
-}
-
-bool suficient_red(Mat frame)
-{
-    int soma = 0; //number of red pixels
-    int MIN_RED = 100000;
-
-    for(int i = 1; i < frame.rows; i++){
-        for(int j = 1; j < frame.cols; j++){
-            if (frame.at<uchar>(i, j) >= 200){
-                soma++;
-            }
-        }
+    cv_bridge::CvImagePtr cam_frame;    
+    try{
+        cam_frame = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::BGR8);
+    
+    }catch (cv_bridge::Exception& e){
+        ROS_ERROR("cv_bridge exception: %s", e.what());
     }
-
-    std::cout << soma << std::endl;    
-    if (soma > MIN_RED){
-        return true;
-    }
-    else
-        return false;
-
 }
+
+/*
+void HDetector::image_cb(const sensor_msgs::ImageConstPtr& img){
+    if(this->runnin){
+        cv_bridge::CvImagePtr cv_ptr;
