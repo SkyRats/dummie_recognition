@@ -25,7 +25,7 @@ int main (){
     Mat imggray; 
    
 
-    ros::init(argc, argv, "dummie_detection");
+    ros::init(argc argv, "dummie_detection");
 
     ros::NodeHandle n;
   
@@ -33,16 +33,16 @@ int main (){
     ros:: Subscriber running_state_sub = n.subscribe("/cv_detection/set_running_state", 10, running_callback);
     ros::spin(); // trava o programa para rodar somente o callback
     
-    bool running = NodeHandle::subscriber(running_state_sub); 
+    bool running = n::subscriber(running_state_sub); 
     
     while (running == true) {
         // Show each frame
-        frame = NodeHandle::subscriber(cam_sub);
+        frame = n::subscriber(cam_sub);
         imshow("Camera", frame);
 
-        cvtColor(frame, imgHSV, COLOR_RGB2HSV);
+        cvtColor(frame, imggray, COLOR_RGB2HSV);
        
-        imgred = red(imgHSV);
+        imgred = red(imggray);
         
         cvtColor(imgred, imggray, COLOR_RGB2GRAY);
     
