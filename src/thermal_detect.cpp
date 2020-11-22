@@ -15,8 +15,8 @@ using namespace cv;
 //Mat red(Mat frame);
 //bool suficient_red(Mat frame);
 
-void cam_callback(onst sensor_msgs::ImageConstPtr& img);
-
+void cam_callback(const sensor_msgs::ImageConstPtr& img);
+void running_callback (bool data);
 int main (){
 
     int contador = 0;
@@ -30,7 +30,7 @@ int main (){
     ros::NodeHandle n;
   
     ros::Subscriber cam_sub = n.subscribe("/iris_fpv_cam/usb_cam/image_raw", 5, cam_callback);
-    ros:: Subscriber running_state_sub = n.subscribe("/cv_detection/set_running_state", 10, running_callback)
+    ros:: Subscriber running_state_sub = n.subscribe("/cv_detection/set_running_state", 10, running_callback);
     ros::spin(); // trava o programa para rodar somente o callback
     
     bool running = NodeHandle::subscriber(running_state_sub); 
@@ -58,9 +58,9 @@ int main (){
         running = NodeHandle::subscriber(running_state_sub); 
     }
     if (running == true){
-1        // end of webcam
+        // end of webcam
         namedWindow("RED", CV_WINDOW_AUTOSIZE);
-        namedWindow("GRAY", CV_WINDOW_AUTOSIZE); CV_WINDOW_AUTOSIZE
+        namedWindow("GRAY", CV_WINDOW_AUTOSIZE);
         imshow("RED", imgred);
         imshow("GRAY", imggray);
         waitKey(0);
@@ -73,7 +73,7 @@ int main (){
     
 void running_callback(bool data)
 {
-    bool running = data.data;
+   bool running = data.data;
 
 }
 
@@ -88,7 +88,7 @@ void cam_callback(const sensor_msgs::ImageConstPtr& img)
     }
 }
 
-/*
-void HDetector::image_cb(const sensor_msgs::ImageConstPtr& img){
-    if(this->runnin){
-        cv_bridge::CvImagePtr cv_ptr;
+
+//void HDetector::image_cb(const sensor_msgs::ImageConstPtr& img){
+//    if(this->runnin){
+//        cv_bridge::CvImagePtr cv_ptr;

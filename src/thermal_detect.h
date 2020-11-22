@@ -2,6 +2,7 @@
 #define REDDETECTION_H
 #include <iostream>
 #include <opencv2/opencv.hpp>
+using namespace cv;
 
 Mat red(Mat frame);
 bool suficient_red(Mat frame);
