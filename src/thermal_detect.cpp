@@ -9,15 +9,16 @@
 
 using namespace cv;
 //using namespace std;
-//     running_sub = rospy.Subscriber("/cv_detection/set_running_state", Bool, running_callback)
-// self.cv_control_publisher = rospy.Publisher("/cv_detection/set_running_state", Bool, queue_size=10)
+//running_sub = rospy.Subscriber("/cv_detection/set_running_state", Bool, running_callback)
+//self.cv_control_publisher = rospy.Publisher("/cv_detection/set_running_state", Bool, queue_size=10)
 
 //Mat red(Mat frame);
 //bool suficient_red(Mat frame);
 
+
 void cam_callback(const sensor_msgs::ImageConstPtr& img);
 void running_callback (bool data);
-int main (){
+int main (int argc, char**argv){
 
     int contador = 0;
     Mat frame;
@@ -25,19 +26,21 @@ int main (){
     Mat imggray; 
    
 
-    ros::init(argc argv, "dummie_detection");
+    ros::init(argc, argv, "dummie_detection");
 
     ros::NodeHandle n;
-  
-    ros::Subscriber cam_sub = n.subscribe("/iris_fpv_cam/usb_cam/image_raw", 5, cam_callback);
-    ros:: Subscriber running_state_sub = n.subscribe("/cv_detection/set_running_state", 10, running_callback);
+    Run* run = new Run();
+    Cam* cam = new Cam();
+
+    
+    
     ros::spin(); // trava o programa para rodar somente o callback
     
-    bool running = n::subscriber(running_state_sub); 
+    bool running = run.running; 
     
     while (running == true) {
         // Show each frame
-        frame = n::subscriber(cam_sub);
+        frame = cam.cam_frame;
         imshow("Camera", frame);
 
         cvtColor(frame, imggray, COLOR_RGB2HSV);
@@ -55,12 +58,12 @@ int main (){
             std::cout << "ALL DUMMIES HAVE BEEN FOUND" << std::endl;
             break;
         }
-        running = NodeHandle::subscriber(running_state_sub); 
+        running = run.running; 
     }
     if (running == true){
         // end of webcam
-        namedWindow("RED", CV_WINDOW_AUTOSIZE);
-        namedWindow("GRAY", CV_WINDOW_AUTOSIZE);
+        namedWindow("RED", CV_MINOR_VERSION);
+        namedWindow("GRAY", CV_MINOR_VERSION);
         imshow("RED", imgred);
         imshow("GRAY", imggray);
         waitKey(0);
@@ -71,17 +74,16 @@ int main (){
     return 0;
 };
     
-void running_callback(bool data)
+void Run::running_callback(bool data)
 {
    bool running = data.data;
 
 }
 
-void cam_callback(const sensor_msgs::ImageConstPtr& img)
-{
-    cv_bridge::CvImagePtr cam_frame;    
+void Cam::cam_callback(const sensor_msgs::ImageConstPtr& img)
+{ 
     try{
-        cam_frame = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::BGR8);
+        this->cam_frame = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::BGR8);
     
     }catch (cv_bridge::Exception& e){
         ROS_ERROR("cv_bridge exception: %s", e.what());
