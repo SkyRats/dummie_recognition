@@ -9,25 +9,6 @@ Mat red(Mat frame);
 bool suficient_red(Mat frame);
 ros::NodeHandle n;
 
-//classes //
-class Cam{
-    private:
-        ros::Subscriber cam_sub = n.subscribe("/iris_fpv_cam/usb_cam/image_raw", 5, &Cam::cam_callback, &cam_frame);
-    public:    
-        void cam_callback(const sensor_msgs::ImageConstPtr& img);
-        sensor_msgs::ImageConstPtr& cam_frame;
-
-};
-
-class Run{
-    private:
-        ros:: Subscriber running_state_sub = n.subscribe("/cv_detection/set_running_state", 10, &Run::running_callback, &running);
-
-    public:
-        void running_callback(bool data);
-        bool running;
-};
-
 
 // functions //
 Mat red(Mat frame){
