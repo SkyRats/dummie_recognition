@@ -1,5 +1,5 @@
 #include <iostream>
-#include "ros/ros.h"
+#include <ros/ros.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/videoio.hpp>
 #include <sensor_msgs/image_encodings.h>
@@ -8,6 +8,7 @@
 //#include "thermal_detect.h"
 #include "std_msgs/Bool.h"
 //#include "cv_detection/H_info.h"
+
 #define MAX_DUMMIES 1
 
 using namespace cv;
@@ -24,21 +25,21 @@ class DumDetect{
     public:
         DumDetect();
         ~DumDetect();
-        sensor_msgs::ImageConstPtr& cam_frame;
+        Mat cam_frame;
         bool running_state; 
         ros::Publisher run_pub;
 
         Mat red(Mat frame);
-        Mat suficient_red(Mat frame);
+        bool suficient_red(Mat frame);
         bool allfound(Mat frame);
 };
 
 //CLASS IMPLEMENTATION
 DumDetect::DumDetect()
 {
-    this->cam_sub = this->n.subscribe("/iris_fpv_cam/usb_cam/image_raw", 5, &DumDetect::cam_callback, &cam_frame);
-    this->run_sub = this->n.subscribe("/cv_detection/set_running_state", 10, &DumDetect::running_callback, &running_state);
-    this->run_pub = this->n.advertise<std_msgs::Bool>("/cv_detection/set_running_state", 0);
+    this->cam_sub = this->n.subscribe("/iris_fpv_cam/usb_cam/image_raw", 5, &DumDetect::cam_callback, this);
+    this->run_sub = this->n.subscribe("/cv_detection/set_running_state", 10, &DumDetect::running_callback, this);
+    this->run_pub = this->n.advertise<std_msgs::Bool>("/cv_detection/set_running_state", 1);
 }
 
 DumDetect::~DumDetect(){
@@ -53,10 +54,13 @@ void DumDetect::running_callback(std_msgs::Bool data)
 
 void DumDetect::cam_callback(const sensor_msgs::ImageConstPtr& img)
 {
+    cv_bridge::CvImagePtr ros_img;
     try{
-        this->cam_frame = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::RGB8);
-
-        this->cam_frame = cv_bridge::toCvCopy(const sensor_msgs::Image& this->cam_frame);
+         
+        ros_img = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::RGB8);
+        
+        this->cam_frame = ros_img->image;
+        //this->cam_frame = cv_bridge::toCvCopy(const sensor_msgs::Image& this->cam_frame);
 
     }catch (cv_bridge::Exception& e){
         ROS_ERROR("cv_bridge exception: %s", e.what());
@@ -111,6 +115,7 @@ bool DumDetect::suficient_red(Mat frame)
 
 }
 
+
 bool DumDetect::allfound(Mat frame){
     int n = MAX_DUMMIES;
     int contador = 0;
@@ -144,22 +149,27 @@ bool DumDetect::allfound(Mat frame){
 int main (int argc, char**argv){
 
     bool teste = false;
+  
     ros::init(argc, argv, "dummie_detection");
     DumDetect* find = new DumDetect();
     ros::spin(); // trava o programa para rodar somente o callback    
-    if(this->running_state)
+    if(find->running_state)
     {
-        teste = find->allfound(find->cam_frame);
+        Mat img = find->cam_frame;
+        teste = find->allfound(img);
     }
     if (teste)
     {
-        find->run_pub.publish(teste);
+        std_msgs::Bool teste_pub;
+        teste_pub.data = true;
+        find->run_pub.publish(teste_pub);
         std::cout << "MISSION COMPLETED" << std::endl;
     }
     else
     {
         std::cout<< "MISSION INCOMPLETE" << std::endl;
     }
+    delete find;
     return 0;
 };
 
@@ -177,4 +187,6 @@ CvImagePtr toCvCopy(const sensor_msgs::ImageConstPtr& source,
 
 //    if(this->running){
 //        cv_bridge::CvImagePtr cv_ptr;
+//     <node pkg="dummie_recognition" name="thermal_detection" type="thermal_detect.cpp" output="screen"/>
+
 

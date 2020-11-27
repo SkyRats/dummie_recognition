@@ -1,7 +1,7 @@
 <launch>
-    <rosparam command="load" file="$(find viscon)/config/mavros_params.yaml"/>
+    <rosparam command="load" file="$(find mavbase)/config/mavros_params.yaml"/>
     <param name="/vel_topic" value="/mavros/setpoint_velocity/cmd_vel"/>
-    <node pkg="dummie_recognition" name="thermal_detection" type="thermal_detect.cpp" output="screen"/>
+    <node pkg="dummie_recognition" name="dummie_detection" type="dummie_detection" output="screen"/>
     <node pkg="dummie_recognition" name="detection_control" type="control.py" output="screen"/>
 
 </launch>

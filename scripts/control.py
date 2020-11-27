@@ -1,6 +1,7 @@
 #!/usr/bin/env python
+
 import rospy
-from MAV import MAV
+from mavbase.MAV import MAV
 from std_msgs.msg import Bool
 from geometry_msgs.msg import TwistStamped, PoseStamped, Vector3Stamped
 
@@ -9,7 +10,7 @@ from cv_detection.msg import H_info
 height = 2
 
 def running_callback(state_data):
-    global running_state = state_data
+    running_state = state_data.data
 
 def run():
     
@@ -18,7 +19,8 @@ def run():
     running_state = False
     running_state_pub = rospy.Publisher("/cv_detection/set_running_state", Bool, queue_size=10)
     running_state_sub = rospy.Subscriber("/cv_detection/set_running_state", Bool, running_callback, queue_size=1)
-    
+
+    rospy.logwarn("CONTROL.PY RUNNING")
     mav.takeoff(height)
     running_state = True
     running_state_pub.publish(running_state)
