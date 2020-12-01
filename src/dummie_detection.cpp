@@ -8,9 +8,11 @@
 #include <geometry_msgs/PoseStamped.h>
 //#include "thermal_detect.h"
 #include "std_msgs/Bool.h"
+#include <cmath>
 //#include "cv_detection/H_info.h"
 
 #define MAX_DUMMIES 3
+#define MIN_DIST 1
 
 using namespace cv;
 
@@ -23,7 +25,7 @@ class DumDetect{
         ros::Subscriber run_sub;
         void running_callback(std_msgs::Bool data);
         ros::Subscriber pose_sub;
-        void pose_callback(geometry_msgs::PoseStamped pose)
+        void pose_callback(geometry_msgs::PoseStamped pose);
     
     public:
         DumDetect();
@@ -126,10 +128,13 @@ bool DumDetect::suficient_red(Mat frame)
 
 }
 
+ 
 bool DumDetect::allfound(Mat frame){
-    int n = MAX_DUMMIES;
-    int contador = 0;
-    
+    int n = MAX_DUMMIES, contador = 0, m = MIN_DIST;
+    geometry_msgs::PoseStamped drone_pose_initial;
+    geometry_msgs::PoseStamped drone_pose;
+    double dist_x, dist_y, dist;
+
     while (this->running_state == true) {
         // Save each frame
         imshow("Camera", frame);
@@ -141,11 +146,11 @@ bool DumDetect::allfound(Mat frame){
         imgred = this->red(frame);
         
         cvtColor(imgred, imggray, COLOR_RGB2GRAY);
-        drone_pose_initial = this->actual_pose;
+        
     
         if (this->suficient_red(imggray) && change_position){
             //std::cout << "DUMMIE FOUND" << std::endl;
-            ros::ROS_WARN( "DUMMIE FOUND ");
+            ROS_WARN( "DUMMIE FOUND ");
             
             drone_pose_initial = this->actual_pose;
             contador++;
@@ -154,13 +159,20 @@ bool DumDetect::allfound(Mat frame){
         }
         if (contador == n){
             //std::cout << "ALL DUMMIES HAVE BEEN FOUND" << std::endl;
-            ros::ROS_WARN("ALL DUMMIES HAVE BEEN FOUND")
+            ROS_WARN("ALL DUMMIES HAVE BEEN FOUND");
             return true;
         }
+        // MIN DISTANCE
+        drone_pose = this->actual_pose; 
+        dist_x = (drone_pose.pose.position.x - drone_pose_initial.pose.position.x);
+        dist_y = (drone_pose.pose.position.y - drone_pose_initial.pose.position.y);
         
-        if (drone_pose - drone_pose_init) // definir a conditional
+        dist = dist_x * dist_x + dist_y * dist_y;
+        dist = sqrt(dist);
+        
+        if (dist > m) // definir a conditional
         {
-            change_position = true;
+            this->change_position = true;
         }
         ros::spin();
     }
@@ -185,11 +197,11 @@ int main (int argc, char**argv){
         std_msgs::Bool teste_pub;
         teste_pub.data = true;
         find->run_pub.publish(teste_pub);
-        ros::ROS_WARN("MISSION COMPLETED");
+        ROS_WARN("MISSION COMPLETED");
     }
     else
     {
-        ros::ROS_WARN("MISSION INCOMPLETE");
+        ROS_WARN("MISSION INCOMPLETE");
     }
     delete find;
     return 0;
