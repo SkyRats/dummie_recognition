@@ -5,11 +5,12 @@
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/Image.h>
+#include <geometry_msgs/PoseStamped.h>
 //#include "thermal_detect.h"
 #include "std_msgs/Bool.h"
 //#include "cv_detection/H_info.h"
 
-#define MAX_DUMMIES 1
+#define MAX_DUMMIES 3
 
 using namespace cv;
 
@@ -21,12 +22,16 @@ class DumDetect{
         void cam_callback(const sensor_msgs::ImageConstPtr& img);
         ros::Subscriber run_sub;
         void running_callback(std_msgs::Bool data);
+        ros::Subscriber pose_sub;
+        void pose_callback(geometry_msgs::PoseStamped pose)
     
     public:
         DumDetect();
         ~DumDetect();
         Mat cam_frame;
         bool running_state; 
+        bool change_position = true;
+        geometry_msgs::PoseStamped actual_pose;
         ros::Publisher run_pub;
 
         Mat red(Mat frame);
@@ -40,6 +45,7 @@ DumDetect::DumDetect()
     this->cam_sub = this->n.subscribe("/iris_fpv_cam/usb_cam/image_raw", 5, &DumDetect::cam_callback, this);
     this->run_sub = this->n.subscribe("/cv_detection/set_running_state", 10, &DumDetect::running_callback, this);
     this->run_pub = this->n.advertise<std_msgs::Bool>("/cv_detection/set_running_state", 1);
+    this->pose_sub = this->n.subscribe("/mavros/local_position/pose", 1, &DumDetect::pose_callback, this);
 }
 
 DumDetect::~DumDetect(){
@@ -65,6 +71,11 @@ void DumDetect::cam_callback(const sensor_msgs::ImageConstPtr& img)
     }catch (cv_bridge::Exception& e){
         ROS_ERROR("cv_bridge exception: %s", e.what());
     }
+}
+
+void DumDetect::pose_callback(geometry_msgs::PoseStamped pose)
+{
+    this->actual_pose = pose;
 }
     
 //FUNCTIONS IMPLEMENTATIONS
@@ -115,30 +126,41 @@ bool DumDetect::suficient_red(Mat frame)
 
 }
 
-
 bool DumDetect::allfound(Mat frame){
     int n = MAX_DUMMIES;
     int contador = 0;
+    
     while (this->running_state == true) {
         // Save each frame
         imshow("Camera", frame);
         Mat imggray;
         Mat imgred;
-        
+                
         cvtColor(frame, frame, COLOR_RGB2HSV);
        
         imgred = this->red(frame);
         
         cvtColor(imgred, imggray, COLOR_RGB2GRAY);
+        drone_pose_initial = this->actual_pose;
     
-        if (this->suficient_red(imggray)){
-            std::cout << "DUMMIE FOUND" << std::endl;
+        if (this->suficient_red(imggray) && change_position){
+            //std::cout << "DUMMIE FOUND" << std::endl;
+            ros::ROS_WARN( "DUMMIE FOUND ");
+            
+            drone_pose_initial = this->actual_pose;
             contador++;
+            change_position = false;
             //break;
         }
         if (contador == n){
-            std::cout << "ALL DUMMIES HAVE BEEN FOUND" << std::endl;
+            //std::cout << "ALL DUMMIES HAVE BEEN FOUND" << std::endl;
+            ros::ROS_WARN("ALL DUMMIES HAVE BEEN FOUND")
             return true;
+        }
+        
+        if (drone_pose - drone_pose_init) // definir a conditional
+        {
+            change_position = true;
         }
         ros::spin();
     }
@@ -163,11 +185,11 @@ int main (int argc, char**argv){
         std_msgs::Bool teste_pub;
         teste_pub.data = true;
         find->run_pub.publish(teste_pub);
-        std::cout << "MISSION COMPLETED" << std::endl;
+        ros::ROS_WARN("MISSION COMPLETED");
     }
     else
     {
-        std::cout<< "MISSION INCOMPLETE" << std::endl;
+        ros::ROS_WARN("MISSION INCOMPLETE");
     }
     delete find;
     return 0;
