@@ -26,9 +26,9 @@ def run():
     running_state_pub.publish(is_running)
     mav.set_position(-5, -5, height)
     
-    while not rospy.is_shutdown():
-        if running_state == True:
-            rospy.logwarn("ALL DUMMIES FOUND")
+#    while not rospy.is_shutdown():
+    if not running_state:
+        rospy.logwarn("NOT ALL DUMMIES WERE FOUND")
         
 
 if __name__ == "__main__":
