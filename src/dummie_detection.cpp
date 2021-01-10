@@ -130,10 +130,10 @@ bool DumDetect::suficient_red(Mat frame)
 
  
 bool DumDetect::allfound(Mat frame){
-    int n = MAX_DUMMIES, contador = 0, m = MIN_DIST;
+    int n = MAX_DUMMIES, contador = 0;
     geometry_msgs::PoseStamped drone_pose_initial;
     geometry_msgs::PoseStamped drone_pose;
-    double dist_x, dist_y, dist;
+    double dist_x, dist_y, dist, m = MIN_DIST;
 
     while (this->running_state == true) {
         // Save each frame
@@ -148,9 +148,9 @@ bool DumDetect::allfound(Mat frame){
         cvtColor(imgred, imggray, COLOR_RGB2GRAY);
         
     
-        if (this->suficient_red(imggray) && change_position){
-            //std::cout << "DUMMIE FOUND" << std::endl;
-            ROS_WARN( "DUMMIE FOUND ");
+        if (change_position && this->suficient_red(imggray)){
+            //std::cout<<"DUMMIE FOUND "<<std::endl;
+            ROS_INFO("DUMMIE FOUND ")
             
             drone_pose_initial = this->actual_pose;
             contador++;
@@ -158,8 +158,8 @@ bool DumDetect::allfound(Mat frame){
             //break;
         }
         if (contador == n){
-            //std::cout << "ALL DUMMIES HAVE BEEN FOUND" << std::endl;
-            ROS_WARN("ALL DUMMIES HAVE BEEN FOUND");
+            //std::cout<<"ALL DUMMIES HAVE BEEN FOUND"<<std::endl;
+            ROS_INFO("ALL DUMMIES HAVE BEEN FOUND");
             return true;
         }
         // MIN DISTANCE
@@ -183,9 +183,10 @@ bool DumDetect::allfound(Mat frame){
 int main (int argc, char**argv){
 
     bool teste = false;
-  
+    while (ros::ok()){
     ros::init(argc, argv, "dummie_detection");
     DumDetect* find = new DumDetect();
+
     ros::spin(); // trava o programa para rodar somente o callback    
     if(find->running_state)
     {
@@ -197,14 +198,18 @@ int main (int argc, char**argv){
         std_msgs::Bool teste_pub;
         teste_pub.data = true;
         find->run_pub.publish(teste_pub);
-        ROS_WARN("MISSION COMPLETED");
+        //std::cout<<"MISSION COMPLETED"<<std::endl;
+        ROS_INFO("MISSION COMPLETED");
     }
     else
     {
-        ROS_WARN("MISSION INCOMPLETE");
+        //std::cout<<"MISSION INCOMPLETE"<<std::endl;
+        ROS_INFO("MISSION INCOMPLETE");
     }
     delete find;
+    }
     return 0;
+    
 };
 
 
