@@ -149,6 +149,7 @@ bool DumDetect::allfound(Mat frame){
         
     
         if (change_position && this->suficient_red(imggray)){
+
             //std::cout << "DUMMIE FOUND" << std::endl;
             ROS_WARN( "DUMMIE FOUND ");
             
@@ -158,8 +159,8 @@ bool DumDetect::allfound(Mat frame){
             //break;
         }
         if (contador == n){
-            //std::cout << "ALL DUMMIES HAVE BEEN FOUND" << std::endl;
-            ROS_WARN("ALL DUMMIES HAVE BEEN FOUND");
+            //std::cout<<"ALL DUMMIES HAVE BEEN FOUND"<<std::endl;
+            ROS_INFO("ALL DUMMIES HAVE BEEN FOUND");
             return true;
         }
         // MIN DISTANCE
@@ -183,6 +184,7 @@ bool DumDetect::allfound(Mat frame){
 int main (int argc, char**argv){
 
     bool teste = false;
+
     while(ros::ok()){
         
         ros::init(argc, argv, "dummie_detection");
@@ -207,7 +209,9 @@ int main (int argc, char**argv){
     
     }
     delete find;
+    }
     return 0;
+
 };
 
 

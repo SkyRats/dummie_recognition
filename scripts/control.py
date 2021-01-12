@@ -32,7 +32,9 @@ def run():
     
 #    while not rospy.is_shutdown():
     if not running_state:
-        rospy.logwarn("NOT ALL DUMMIES WERE FOUND")
+        rospy.logwarn("NOT ALL DUMMIES WERE FOUND - control.py")
+    else:
+        rospy.logwarn("ALL DUMMIES WERE FOUND - control.py")
         
 
 if __name__ == "__main__":
