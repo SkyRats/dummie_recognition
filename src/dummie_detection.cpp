@@ -11,7 +11,7 @@
 #include <cmath>
 //#include "cv_detection/H_info.h"
 
-#define MAX_DUMMIES 3
+#define MAX_DUMMIES 1
 #define MIN_DIST 1
 
 using namespace cv;
@@ -183,33 +183,36 @@ bool DumDetect::allfound(Mat frame){
 //MAIN 
 int main (int argc, char**argv){
 
-    bool teste = false;
-
-    while(ros::ok()){
-        
-        ros::init(argc, argv, "dummie_detection");
-        DumDetect* find = new DumDetect();
-        if(find->running_state)
-        {
-            Mat img = find->cam_frame;
-            teste = find->allfound(img);
-        }
-        if (teste)
-        {
-            std_msgs::Bool teste_pub;
-            teste_pub.data = true;
-            find->run_pub.publish(teste_pub);
-            ROS_WARN("MISSION COMPLETED");
-        }
-        else
-        {
-            ROS_WARN("MISSION INCOMPLETE");
-        }
-        ros::spin(); // trava o programa para rodar somente o callback    
-    
+    bool teste = true;        
+    ros::init(argc, argv, "dummie_detection");
+    DumDetect* find = new DumDetect();
+    while (!find->running_state){
+        ros::spin();
     }
+    if(find->running_state)
+    {
+        ROS_WARN("IF DO RUNNING_STATE - cpp");
+        Mat img = find->cam_frame;
+        teste = find->allfound(img);
+    }
+    if (teste)
+    {
+        std_msgs::Bool teste_pub;
+        teste_pub.data = true;
+        find->run_pub.publish(teste_pub);
+        ROS_WARN("MISSION COMPLETED");
+    }
+    else if (!teste)
+    {
+        ROS_WARN("MISSION INCOMPLETE");
+    }
+    else 
+    {
+        ROS_WARN("????");
+    }
+    ros::spin(); // trava o programa para rodar somente o callback    
     delete find;
-    }
+    
     return 0;
 
 };

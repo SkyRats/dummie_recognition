@@ -29,7 +29,7 @@ def run():
         rate.sleep()
     
     mav.set_position(-5, 5, height)
-    
+  
 #    while not rospy.is_shutdown():
     if not running_state:
         rospy.logwarn("NOT ALL DUMMIES WERE FOUND - control.py")
