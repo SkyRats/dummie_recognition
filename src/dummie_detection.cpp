@@ -130,10 +130,10 @@ bool DumDetect::suficient_red(Mat frame)
 
  
 bool DumDetect::allfound(Mat frame){
-    int n = MAX_DUMMIES, contador = 0, m = MIN_DIST;
+    int n = MAX_DUMMIES, contador = 0;
     geometry_msgs::PoseStamped drone_pose_initial;
     geometry_msgs::PoseStamped drone_pose;
-    double dist_x, dist_y, dist;
+    double dist_x, dist_y, dist, m = MIN_DIST;
 
     while (this->running_state == true) {
         // Save each frame
@@ -148,7 +148,7 @@ bool DumDetect::allfound(Mat frame){
         cvtColor(imgred, imggray, COLOR_RGB2GRAY);
         
     
-        if (this->suficient_red(imggray) && change_position){
+        if (change_position && this->suficient_red(imggray)){
             //std::cout << "DUMMIE FOUND" << std::endl;
             ROS_WARN( "DUMMIE FOUND ");
             
@@ -183,44 +183,32 @@ bool DumDetect::allfound(Mat frame){
 int main (int argc, char**argv){
 
     bool teste = false;
-  
-    ros::init(argc, argv, "dummie_detection");
-    DumDetect* find = new DumDetect();
-    ros::spin(); // trava o programa para rodar somente o callback    
-    if(find->running_state)
-    {
-        Mat img = find->cam_frame;
-        teste = find->allfound(img);
-    }
-    if (teste)
-    {
-        std_msgs::Bool teste_pub;
-        teste_pub.data = true;
-        find->run_pub.publish(teste_pub);
-        ROS_WARN("MISSION COMPLETED");
-    }
-    else
-    {
-        ROS_WARN("MISSION INCOMPLETE");
+    while(ros::ok()){
+        
+        ros::init(argc, argv, "dummie_detection");
+        DumDetect* find = new DumDetect();
+        if(find->running_state)
+        {
+            Mat img = find->cam_frame;
+            teste = find->allfound(img);
+        }
+        if (teste)
+        {
+            std_msgs::Bool teste_pub;
+            teste_pub.data = true;
+            find->run_pub.publish(teste_pub);
+            ROS_WARN("MISSION COMPLETED");
+        }
+        else
+        {
+            ROS_WARN("MISSION INCOMPLETE");
+        }
+        ros::spin(); // trava o programa para rodar somente o callback    
+    
     }
     delete find;
     return 0;
 };
 
-
-// http://library.isr.ist.utl.pt/docs/roswiki/cv_bridge(2f)Tutorials(2f)ConvertingBetweenROSImagesAndOpenCVImagesPython.html
-/* 
-    detect(Mat frame)
-    detect(cam_frame->image)
-CvImagePtr toCvCopy(const sensor_msgs::ImageConstPtr& source,
-                      const std::string& encoding = std::string());
-    CvImagePtr toCvCopy(const sensor_msgs::Image& source,
-                        const std::string& encoding = std::string());
-//void HDetector::image_cb(const sensor_msgs::ImageConstPtr& img){ 
-    */
-
-//    if(this->running){
-//        cv_bridge::CvImagePtr cv_ptr;
-//     <node pkg="dummie_recognition" name="thermal_detection" type="thermal_detect.cpp" output="screen"/>
 
 

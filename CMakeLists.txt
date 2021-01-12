@@ -114,6 +114,7 @@ catkin_package(
                  std_msgs
                  cv_bridge
                  image_transport
+                 cv_detection
 )
 
 
