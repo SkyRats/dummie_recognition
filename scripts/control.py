@@ -6,6 +6,7 @@ from std_msgs.msg import Bool
 from geometry_msgs.msg import TwistStamped, PoseStamped, Vector3Stamped
 
 from cv_detection.msg import H_info
+from dummie_recognition.msg import Running
 
 height = 2
 
@@ -13,22 +14,41 @@ def running_callback(state_data):
     global running_state
     running_state = state_data.data
 
+def teste_callback(state_data):
+    global teste_state
+    teste_state = state_data
+
 def run():
     
     rospy.init_node("head")
     mav = MAV("jorge")
     rate = rospy.Rate(60)
+
     running_state_pub = rospy.Publisher("/cv_detection/set_running_state", Bool, queue_size=10)
     running_state_sub = rospy.Subscriber("/cv_detection/set_running_state", Bool, running_callback, queue_size=1)
 
+    # NOVO TOPICO
+    teste_running_pub = rospy.Publisher("dummie_recognition/set_running_state", Running, queue_size=10)
+    teste_running_sub = rospy.Subscriber("dummie_recognition/set_running_state", Running, teste_callback, queue_size=1)
+
     rospy.logwarn("CONTROL.PY RUNNING")
     mav.takeoff(height)
+    
+    teste = Running()
+    teste.search = True
+    teste.detected = True
+    teste.id = 76
+    teste.pose_x = 10
+    teste.pose_y = 80
+
     is_running = True
     for i in range(10):
         running_state_pub.publish(is_running)
+        teste_running_pub.publish(teste)
         rate.sleep()
     
     mav.set_position(-5, 5, height)
+    rospy.logwarn('NEW MSG = ' + str(teste_state))
   
 #    while not rospy.is_shutdown():
     if not running_state:

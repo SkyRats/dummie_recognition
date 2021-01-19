@@ -10,6 +10,7 @@
 #include "std_msgs/Bool.h"
 #include <cmath>
 //#include "cv_detection/H_info.h"
+#include "dummie_recognition/Running.h"
 
 #define MAX_DUMMIES 1
 #define MIN_DIST 1
@@ -26,6 +27,8 @@ class DumDetect{
         void running_callback(std_msgs::Bool data);
         ros::Subscriber pose_sub;
         void pose_callback(geometry_msgs::PoseStamped pose);
+        //ros::Subscriber teste_sub;
+        //void teste_callback(dummie_recognition::Running info);
     
     public:
         DumDetect();
@@ -34,11 +37,14 @@ class DumDetect{
         bool running_state; 
         bool change_position = true;
         geometry_msgs::PoseStamped actual_pose;
+        dummie_recognition::Running teste_state;
         ros::Publisher run_pub;
+        //ros::Publisher teste_pub;
 
         Mat red(Mat frame);
         bool suficient_red(Mat frame);
         bool allfound(Mat frame);
+        //void teste_running(bool search, bool detected, int id);
 };
 
 //CLASS IMPLEMENTATION
@@ -48,6 +54,8 @@ DumDetect::DumDetect()
     this->run_sub = this->n.subscribe("/cv_detection/set_running_state", 10, &DumDetect::running_callback, this);
     this->run_pub = this->n.advertise<std_msgs::Bool>("/cv_detection/set_running_state", 1);
     this->pose_sub = this->n.subscribe("/mavros/local_position/pose", 1, &DumDetect::pose_callback, this);
+    //this->teste_sub = this->n.subscribe("/dummie_recognition/set_running_state", 10, &DumDetect::teste_callback, this);
+    //this->teste_pub = this->n.advertise<dummie_recognition::Running>("/dummie_recognition/set_running_state", 1);
 }
 
 DumDetect::~DumDetect(){
@@ -79,6 +87,11 @@ void DumDetect::pose_callback(geometry_msgs::PoseStamped pose)
 {
     this->actual_pose = pose;
 }
+/*
+void DumDetect::teste_callback(dummie_recognition::Running info)
+{
+    this->teste_state = info;
+}*/
     
 //FUNCTIONS IMPLEMENTATIONS
 Mat DumDetect::red(Mat frame){
@@ -119,7 +132,7 @@ bool DumDetect::suficient_red(Mat frame)
             }
         }
     }
-    std::cout << soma << std::endl;    
+    //std::cout << soma << std::endl;    
     if (soma > MIN_RED){
         return true;
     }
@@ -179,6 +192,17 @@ bool DumDetect::allfound(Mat frame){
     }
     return false;
 }
+/*
+void DumDetect::teste_running(bool search, bool detected, int id){
+    dummie_recognition::Running pub;
+    pub.search = search;
+    pub.detected = detected;
+    pub.id = id;
+    for (int i = 0; i < 10; i++){
+        this->teste_pub.publish(pub);
+    }
+    
+}*/
 
 //MAIN 
 int main (int argc, char**argv){
@@ -186,6 +210,14 @@ int main (int argc, char**argv){
     bool teste = true;        
     ros::init(argc, argv, "dummie_detection");
     DumDetect* find = new DumDetect();
+    /*
+    // NOVO TOPICO
+    bool search = true;
+    bool detected = false;
+    int id = 8;
+    find->teste_running(search, detected, id);
+*/
+    
     while (!find->running_state){
         ros::spin();
     }
@@ -210,12 +242,20 @@ int main (int argc, char**argv){
     {
         ROS_WARN("????");
     }
+
+    /*if(find->teste_state.search){
+        ROS_WARN("c++: search = true");
+    }
+
+    if(!find->teste_state.detected){
+        ROS_WARN("c++: detected = false");
+    }
+
+    ROS_WARN("c++: id = %d", find->teste_state.id);*/
+
     ros::spin(); // trava o programa para rodar somente o callback    
     delete find;
     
     return 0;
 
 };
-
-
-
