@@ -17,6 +17,7 @@ using namespace cv;
 
 #define MAX_DUMMIES 1
 #define MIN_DIST 1
+#define MIN_RED 4000
 
 //CLASS DEFINITION
 class DumDetect
@@ -114,30 +115,28 @@ void DumDetect::run_callback(dummie_recognition::Running state)
 Mat DumDetect::red(Mat frame)
 {
     Mat mask1, mask2, res1;
-
+    //std::cout<< (frame) << std::endl;
     // creating mask
     inRange(frame, Scalar(0, 120, 70), Scalar(10, 255, 255), mask1);
     inRange(frame, Scalar(170, 120, 70), Scalar(180, 255, 255), mask2);
-
+    
     mask1 += mask2;
 
     Mat kernel = Mat::ones(3,3, CV_32F);
     morphologyEx(mask1,mask1,cv::MORPH_OPEN,kernel);
     morphologyEx(mask1,mask1,cv::MORPH_DILATE,kernel);
-
     // inverted mask
     bitwise_not(mask1, mask2);
-
     // red part
     bitwise_and(frame, frame, res1, mask2);
 
-    return res1;
+    return mask2;
 }
 
 bool DumDetect::suficient_red(Mat frame)
 {
     int soma = 0; //number of red pixels
-    int MIN_RED = 4000;
+    int M = MIN_RED;
 
     for(int i = 1; i < frame.rows; i++){
         for(int j = 1; j < frame.cols; j++){
@@ -148,18 +147,23 @@ bool DumDetect::suficient_red(Mat frame)
     }
     //std::cout << soma << std::endl;
     ROS_WARN("SOMA = %d", soma);
-    if (soma > MIN_RED){
+    if (soma > M){
+        imshow("frame", frame);
+        waitKey(1000);
         return true;
     }
-    else
+    else{
         return false;
+    }
 }
 
 bool DumDetect::found(Mat frame){
-    
-    cvtColor(frame, frame, COLOR_RGB2HSV);
-    frame = this->red(frame);
-    cvtColor(frame, frame, COLOR_RGB2GRAY);
+
+    for(int i = 0; i < 30; i++){
+        cvtColor(frame, frame, COLOR_RGB2HSV);
+        frame = this->red(frame);
+        cvtColor(frame, frame, COLOR_RGB2GRAY);
+    }
 
     if(this->suficient_red(frame))
     {
@@ -179,3 +183,6 @@ int main(int argc, char** arvg){
     DumDetect* detect = new DumDetect();
     ros::spin();
 };
+
+//https://answers.ros.org/question/344690/opencv-error-assertion-failed-scn-3-scn-4-in-cvtcolor/
+//http://techawarey.com/programming/install-opencv-c-c-in-ubuntu-18-04-lts-step-by-step-guide/
