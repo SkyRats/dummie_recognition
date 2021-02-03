@@ -84,8 +84,8 @@ def run():
         elif run_state.detected and dist(run_state, dummie_x, dummie_y, never_found) < 1.5:
             rospy.loginfo("Detected, but too close")
 
-        else:
-            rospy.loginfo("Nothing detected")
+        #else:
+        #    rospy.loginfo("Nothing detected")
 
         dummie.search = True
         run_pub.publish(dummie)
