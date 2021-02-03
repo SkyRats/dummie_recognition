@@ -72,15 +72,13 @@ void DumDetect::cam_callback(const sensor_msgs::ImageConstPtr& img)
         try
         {
             ros_img = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::RGB8);
-            //this->cam_frame = ros_img->image;
-            //this->cam_frame = cv_bridge::toCvCopy(const sensor_msgs::Image& this->cam_frame);
         }
-        
+
         catch (cv_bridge::Exception& e)
         {
             ROS_ERROR("cv_bridge exception: %s", e.what());
         }
-
+    
         dummie_recognition::Running dummie;
         if(this->found(ros_img->image) == true)
         {
@@ -101,6 +99,7 @@ void DumDetect::cam_callback(const sensor_msgs::ImageConstPtr& img)
     }
 }
 
+ 
 void DumDetect::pose_callback(geometry_msgs::PoseStamped pose)
 {
     this->actual_pose = pose;
@@ -122,15 +121,17 @@ Mat DumDetect::red(Mat frame)
     
     mask1 += mask2;
 
+    //segmenting out the dummie from the frame
     Mat kernel = Mat::ones(3,3, CV_32F);
     morphologyEx(mask1,mask1,cv::MORPH_OPEN,kernel);
     morphologyEx(mask1,mask1,cv::MORPH_DILATE,kernel);
+
     // inverted mask
     bitwise_not(mask1, mask2);
     // red part
     bitwise_and(frame, frame, res1, mask2);
 
-    return mask2;
+    return (res1);
 }
 
 bool DumDetect::suficient_red(Mat frame)
@@ -140,7 +141,7 @@ bool DumDetect::suficient_red(Mat frame)
 
     for(int i = 1; i < frame.rows; i++){
         for(int j = 1; j < frame.cols; j++){
-            if (frame.at<uchar>(i, j) >= 200){
+            if (frame.at<uchar>(i, j) == 0){
                 soma++;
             }
         }
@@ -148,24 +149,33 @@ bool DumDetect::suficient_red(Mat frame)
     //std::cout << soma << std::endl;
     ROS_WARN("SOMA = %d", soma);
     if (soma > M){
-        imshow("frame", frame);
+        imshow("tem vermelho", frame);
         waitKey(1000);
         return true;
     }
     else{
+        imshow("não tem", frame);
+        waitKey(1000);
         return false;
     }
 }
 
 bool DumDetect::found(Mat frame){
 
-    for(int i = 0; i < 30; i++){
-        cvtColor(frame, frame, COLOR_RGB2HSV);
-        frame = this->red(frame);
-        cvtColor(frame, frame, COLOR_RGB2GRAY);
-    }
+    flip(frame, frame, 1);
+    cvtColor(frame, frame, COLOR_RGB2HSV);
+    Mat check, hsv_channels[3], gray_frame;
+    check = this->red(frame);
+    cvtColor(check, check, COLOR_HSV2RGB);
+    cvtColor(check, check, COLOR_RGB2GRAY);
+    
+    //cv::split(check, hsv_channels);
+    //gray_frame = hsv_channels[2];
 
-    if(this->suficient_red(frame))
+    imshow("frame", check);
+    waitKey(1000);
+
+    if(this->suficient_red(check))
     {
         ROS_WARN("SUFICIENT RED TRUE - cpp");
         return true;
@@ -175,6 +185,7 @@ bool DumDetect::found(Mat frame){
         ROS_WARN("SUFICIENT RED FALSE - cpp");
         return false;
     }
+   
 }
 
 int main(int argc, char** arvg){
@@ -183,6 +194,3 @@ int main(int argc, char** arvg){
     DumDetect* detect = new DumDetect();
     ros::spin();
 };
-
-//https://answers.ros.org/question/344690/opencv-error-assertion-failed-scn-3-scn-4-in-cvtcolor/
-//http://techawarey.com/programming/install-opencv-c-c-in-ubuntu-18-04-lts-step-by-step-guide/
